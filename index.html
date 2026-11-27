@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>羽伶控股</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: linear-gradient(135deg, #fff5f7 0%, #fff0f5 50%, #fdf6ec 100%);
+      color: #4a353b;
+      min-height: 100vh;
+    }
+    .serif-title { font-family: 'Playfair Display', 'Noto Sans TC', serif; }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(244, 182, 194, 0.45);
+      box-shadow: 0 10px 30px -10px rgba(219, 112, 147, 0.15);
+    }
+    .btn-love {
+      background: linear-gradient(135deg, #f472b6 0%, #fb7185 100%);
+      color: white;
+      transition: all 0.2s ease;
+    }
+    .btn-love:active { transform: scale(0.97); }
+    .tab-active {
+      background: linear-gradient(135deg, #f472b6 0%, #fb7185 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(244, 114, 182, 0.35);
+    }
+  </style>
+</head>
+<body class="pb-24">
+
+  <!-- 頂部浪漫標題列 -->
+  <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-pink-100 px-4 py-3">
+    <div class="max-w-2xl mx-auto flex items-center justify-between">
+      <div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-xl">💍</span>
+          <h1 class="font-bold text-base sm:text-lg text-rose-800 tracking-wide">羽伶＆寶貝・婚禮蜜月控股</h1>
+        </div>
+        <p class="text-[11px] text-rose-400">Yu-Ling & Baby Honeymoon Holdings</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="syncFromCloud()" id="syncBtn" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-1.5 rounded-full border border-rose-200 font-medium">
+          🔄 同步雲端
+        </button>
+        <button onclick="toggleModal('settingsModal')" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 px-2.5 py-1.5 rounded-full border border-amber-200">
+          ⚙️
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 蜜月基金總進度橫幅 -->
+  <section class="max-w-2xl mx-auto px-4 pt-4">
+    <div class="glass-card rounded-2xl p-4 relative overflow-hidden">
+      <div class="flex justify-between items-end mb-2">
+        <div>
+          <span class="text-xs font-medium text-rose-400">💕 50歲財富自由 ＆ 環球度蜜月總儲備</span>
+          <div class="text-2xl font-bold text-rose-900 mt-0.5" id="heroTotalWealth">NT$ 0</div>
+        </div>
+        <div class="text-right">
+          <span class="text-[11px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+            只看股數不焦慮波動 ✨
+          </span>
+        </div>
+      </div>
+      <div class="w-full bg-pink-100 rounded-full h-2.5 overflow-hidden">
+        <div id="honeymoonProgressBar" class="bg-gradient-to-r from-pink-400 via-rose-400 to-amber-400 h-2.5 rounded-full transition-all duration-500" style="width: 12%"></div>
+      </div>
+      <div class="flex justify-between text-[11px] text-rose-400 mt-1.5">
+        <span>累計投資投入：<strong id="heroInvestedCost" class="text-rose-700">$0</strong></span>
+        <span>公司現金水庫：<strong id="heroCashReserve" class="text-rose-700">$0</strong></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 三大企業報表切換導覽 -->
+  <nav class="max-w-2xl mx-auto px-4 mt-4">
+    <div class="grid grid-cols-3 gap-2 bg-white/70 p-1.5 rounded-2xl border border-pink-100">
+      <button onclick="switchTab('income')" id="tab-income" class="tab-active py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition">
+        📊 損益表
+      </button>
+      <button onclick="switchTab('balance')" id="tab-balance" class="text-rose-500 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition">
+        💎 資產負債表
+      </button>
+      <button onclick="switchTab('cashflow')" id="tab-cashflow" class="text-rose-500 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition">
+        🌊 現金流量表
+      </button>
+    </div>
+  </nav>
+
+  <!-- 主內容區 -->
+  <main class="max-w-2xl mx-auto px-4 mt-4 space-y-4">
+
+    <!-- ==================== 1. 損益表 (Income Statement) ==================== -->
+    <div id="view-income" class="space-y-4">
+      <div class="glass-card rounded-2xl p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-bold text-rose-900 text-base">💌 本月薪資入帳與水庫自動分配</h2>
+          <span class="text-xs text-rose-400" id="currentMonthLabel">2026-11</span>
+        </div>
+
+        <!-- 入帳金額與比例調整 -->
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-rose-700 mb-1">本月公司入帳總薪資 (NT$)</label>
+            <input type="number" id="inGrossSalary" value="100000" oninput="recalcIncomePreview()"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-pink-200 bg-white text-lg font-bold text-rose-900 focus:outline-none focus:ring-2 focus:ring-pink-300" />
+          </div>
+
+          <div class="grid grid-cols-4 gap-2">
+            <div>
+              <label class="block text-[11px] text-rose-600 mb-1">員工薪水 %</label>
+              <input type="number" id="pctEmp" value="20" oninput="recalcIncomePreview()"
+                class="w-full px-2 py-1.5 rounded-lg border border-pink-200 text-center font-bold text-rose-800 text-sm" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-rose-600 mb-1">固定營運 %</label>
+              <input type="number" id="pctOp" value="35" oninput="recalcIncomePreview()"
+                class="w-full px-2 py-1.5 rounded-lg border border-pink-200 text-center font-bold text-rose-800 text-sm" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-rose-600 mb-1">長期投資 %</label>
+              <input type="number" id="pctInv" value="35" oninput="recalcIncomePreview()"
+                class="w-full px-2 py-1.5 rounded-lg border border-pink-200 text-center font-bold text-rose-800 text-sm" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-rose-600 mb-1">保留盈餘 %</label>
+              <input type="number" id="pctRes" value="10" oninput="recalcIncomePreview()"
+                class="w-full px-2 py-1.5 rounded-lg border border-pink-200 text-center font-bold text-rose-800 text-sm" />
+            </div>
+          </div>
+          <p id="pctWarning" class="text-xs text-red-500 hidden">⚠️ 四項比例加總目前不是 100%，請檢查一下喔！</p>
+        </div>
+
+        <!-- 即時試算與員工無息分期自動內扣面板 -->
+        <div class="mt-4 bg-rose-50/80 rounded-xl p-3.5 border border-pink-200 space-y-2 text-xs">
+          <div class="flex justify-between">
+            <span class="text-rose-600">一、員工「羽伶」應得月薪 (<span id="lblEmpPct">20</span>%)</span>
+            <span class="font-bold text-rose-900" id="prevEmpGross">$20,000</span>
+          </div>
+          <div class="flex justify-between text-amber-700 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+            <span>自動扣除：進行中無息分期本期應還</span>
+            <span class="font-bold" id="prevInstallmentDeduct">-$0</span>
+          </div>
+          <div class="flex justify-between items-center pt-1 border-t border-pink-200">
+            <span class="font-bold text-rose-800 text-sm">👉 本月實際匯款給員工金額：</span>
+            <span class="font-extrabold text-lg text-pink-600" id="prevEmpNetTransfer">$20,000</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 pt-2 border-t border-pink-100 text-center">
+            <div class="bg-white rounded-lg p-2">
+              <div class="text-[10px] text-gray-400">固定營運支出</div>
+              <div class="font-bold text-rose-800" id="prevOpAmt">$35,000</div>
+            </div>
+            <div class="bg-white rounded-lg p-2">
+              <div class="text-[10px] text-gray-400">投資雪球水庫</div>
+              <div class="font-bold text-rose-800" id="prevInvAmt">$35,000</div>
+            </div>
+            <div class="bg-white rounded-lg p-2">
+              <div class="text-[10px] text-gray-400">保留盈餘(含分期回補)</div>
+              <div class="font-bold text-emerald-700" id="prevResAmt">$10,000</div>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="submitIncomeRecord()" class="btn-love w-full mt-4 py-3 rounded-xl font-bold text-sm shadow-md">
+          💖 確認本月入帳並自動撥補四大水庫
+        </button>
+      </div>
+
+      <!-- 歷史損益分配紀錄 -->
+      <div class="glass-card rounded-2xl p-4">
+        <h3 class="font-bold text-rose-900 text-sm mb-2">📜 歷月損益與員工實領匯款明細</h3>
+        <div id="incomeHistoryList" class="space-y-2 text-xs"></div>
+      </div>
+    </div>
+
+    <!-- ==================== 2. 資產負債表 (Balance Sheet) ==================== -->
+    <div id="view-balance" class="space-y-4 hidden">
+      <!-- 水庫餘額總覽卡片 -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="glass-card rounded-2xl p-4">
+          <div class="text-xs text-rose-400">💰 投資水庫「剩餘現金餘額」</div>
+          <div class="text-xl font-bold text-rose-900 mt-1" id="bsInvestCashBalance">$0</div>
+          <div class="text-[11px] text-gray-400 mt-1">累計撥入投資池 − 累計買股花費</div>
+        </div>
+        <div class="glass-card rounded-2xl p-4">
+          <div class="text-xs text-rose-400">🏦 公司保留盈餘「可用水庫」</div>
+          <div class="text-xl font-bold text-emerald-700 mt-1" id="bsReserveCashBalance">$0</div>
+          <div class="text-[11px] text-gray-400 mt-1">保留盈餘累積 − 已墊付未還分期</div>
+        </div>
+      </div>
+
+      <!-- 股票與基金持倉列項（只看股數與投入成本） -->
+      <div class="glass-card rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="font-bold text-rose-900 text-base">📈 股票／基金財富庫存（只看股數）</h2>
+            <p class="text-[11px] text-rose-400">每一股都是未來環球蜜月的基石</p>
+          </div>
+          <button onclick="toggleModal('addAssetModal')" class="btn-love text-xs px-3 py-1.5 rounded-xl font-bold">
+            ＋ 新增買入
+          </button>
+        </div>
+        <div id="assetListContainer" class="space-y-2.5"></div>
+      </div>
+
+      <!-- 每年真實報酬率追蹤欄 -->
+      <div class="glass-card rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h2 class="font-bold text-rose-900 text-base">✨ 年度資產報酬率檢視表</h2>
+            <p class="text-[11px] text-rose-400">每年底結算一次，確認複利雪球有認真長大</p>
+          </div>
+          <button onclick="toggleModal('addReturnModal')" class="text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded-xl font-bold">
+            ＋ 記錄年度報酬
+          </button>
+        </div>
+        <div id="annualReturnList" class="space-y-2 text-xs mt-2"></div>
+      </div>
+
+      <!-- 內部負債：員工尚未還清的無息分期 -->
+      <div class="glass-card rounded-2xl p-4 border-amber-200">
+        <h3 class="font-bold text-amber-900 text-sm mb-2">🧾 內部應收帳款（員工無息分期未扣餘額）</h3>
+        <div id="bsLiabilityList" class="space-y-2 text-xs"></div>
+      </div>
+    </div>
+
+    <!-- ==================== 3. 現金流量表 (Cash Flow) ==================== -->
+    <div id="view-cashflow" class="space-y-4 hidden">
+      <div class="glass-card rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="font-bold text-rose-900 text-base">🌊 水庫現金流出 ＆ 員工無息分期申請</h2>
+            <p class="text-[11px] text-rose-400">公司先刷卡賺回饋，員工未來每月薪水自動無息內扣</p>
+          </div>
+          <button onclick="toggleModal('addCashFlowModal')" class="btn-love text-xs px-3 py-1.5 rounded-xl font-bold">
+            ＋ 登記支出/分期
+          </button>
+        </div>
+        <div id="cashFlowList" class="space-y-2.5 text-xs"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== 彈出視窗：新增買股紀錄 ==================== -->
+  <div id="addAssetModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 space-y-3 shadow-2xl border border-pink-100">
+      <h3 class="font-bold text-rose-900 text-base">📈 登記購入股票／基金</h3>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">標的代號（相同代號會自動累加股數與成本）</label>
+        <input type="text" id="asSymbol" placeholder="例如：0050、00878、006208、安聯" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">標的名稱</label>
+        <input type="text" id="asName" placeholder="例如：元大台灣50" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">本次購入股數/單位數</label>
+          <input type="number" id="asShares" placeholder="300" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">本次花費台幣 (NT$)</label>
+          <input type="number" id="asCost" placeholder="30000" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm" />
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="toggleModal('addAssetModal')" class="flex-1 py-2.5 rounded-xl bg-gray-100 text-gray-600 text-xs font-bold">取消</button>
+        <button onclick="submitAsset()" class="flex-1 py-2.5 rounded-xl btn-love text-xs font-bold">確認寫入庫存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 彈出視窗：新增保留盈餘支出 / 員工無息分期 ==================== -->
+  <div id="addCashFlowModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 space-y-3 shadow-2xl border border-pink-100">
+      <h3 class="font-bold text-rose-900 text-base">🌊 登記水庫動用 / 員工無息分期</h3>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">交易類型</label>
+        <select id="cfType" onchange="toggleInstallmentField()" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm bg-white">
+          <option value="員工無息分期">💝 員工無息分期預支（公司先全額付，員工按月少領薪水）</option>
+          <option value="保留盈餘直出">🏠 公司保留盈餘直接支出（如買充電頭、冬被、旅遊）</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">項目說明</label>
+        <input type="text" id="cfTitle" placeholder="例如：預防性肉毒保養 / PHILIPS 70W充電頭" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">總金額 (NT$)</label>
+          <input type="number" id="cfAmount" placeholder="6000" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm" />
+        </div>
+        <div id="cfMonthsBox">
+          <label class="block text-xs text-gray-500 mb-1">員工分幾期還款 (月)</label>
+          <input type="number" id="cfMonths" value="3" min="1" max="12" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm" />
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="toggleModal('addCashFlowModal')" class="flex-1 py-2.5 rounded-xl bg-gray-100 text-gray-600 text-xs font-bold">取消</button>
+        <button onclick="submitCashFlow()" class="flex-1 py-2.5 rounded-xl btn-love text-xs font-bold">確認登記</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 彈出視窗：記錄年度報酬率 ==================== -->
+  <div id="addReturnModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 space-y-3 shadow-2xl border border-pink-100">
+      <h3 class="font-bold text-rose-900 text-base">✨ 計算年度真實報酬率</h3>
+      <p class="text-[11px] text-gray-500">公式：(年底總市值 − 年初總市值 − 本年新投入本金) ÷ (年初總市值 + 本年新投入本金÷2)</p>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">結算年度</label>
+          <input type="text" id="yrLabel" value="2026" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">年初總資產 (NT$)</label>
+          <input type="number" id="yrStart" placeholder="100000" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">今年新投入本金 (NT$)</label>
+          <input type="number" id="yrNetIn" placeholder="420000" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">年底總資產市值 (NT$)</label>
+          <input type="number" id="yrEnd" placeholder="565000" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm" />
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="toggleModal('addReturnModal')" class="flex-1 py-2.5 rounded-xl bg-gray-100 text-gray-600 text-xs font-bold">取消</button>
+        <button onclick="submitAnnualReturn()" class="flex-1 py-2.5 rounded-xl btn-love text-xs font-bold">計算並儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 彈出視窗：Google Sheet 雲端連線設定 ==================== -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 space-y-3 shadow-2xl border border-pink-100">
+      <h3 class="font-bold text-rose-900 text-base">☁️ Google Sheet 雲端同步設定</h3>
+      <p class="text-xs text-gray-500">貼上妳的 Google Apps Script 網頁應用程式網址，手機與電腦就能雙向同步，也能直接改試算表！</p>
+      <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-xs" />
+      <div class="flex gap-2 pt-2">
+        <button onclick="toggleModal('settingsModal')" class="flex-1 py-2.5 rounded-xl bg-gray-100 text-gray-600 text-xs font-bold">關閉</button>
+        <button onclick="saveGasUrl()" class="flex-1 py-2.5 rounded-xl btn-love text-xs font-bold">儲存並立刻同步</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 預設初始資料（含妳目前的 0050/安聯架構與昨晚的充電頭紀錄範例）
+    const DEFAULT_STATE = {
+      incomeLogs: [
+        { 日期: '2026-11-05', 月份: '2026-11', 入帳總薪資: 100000, '員工比例%': 20, '營運比例%': 35, '投資比例%': 35, '保留盈餘%': 10, 本期分期內扣: 0, 員工實領匯款額: 20000, 備註: '高通首月入帳開張大吉 💖' }
+      ],
+      assets: [
+        { 代號: '0050', 名稱: '元大台灣50', 累計購入股數: 300, 總投入成本: 30000, 最後更新日: '2026-11-27' },
+        { 代號: '安聯', 名稱: '安聯收益成長累積基金', 累計購入股數: 150, 總投入成本: 5000, 最後更新日: '2026-11-27' }
+      ],
+      cashFlows: [
+        { 編號: 'CF-01', 日期: '2026-11-27', 類型: '保留盈餘直出', 項目說明: 'PHILIPS 70W 充電頭（租屋處剛需）', 總金額: 1157, 分期總月數: 1, 已扣期數: 1, 狀態: '已結清' }
+      ],
+      annualReturns: [
+        { 年度: '2026 (預估目標)', 年初總資產: 0, 年度淨投入本金: 70000, 年底總資產: 75600, '年度真實報酬率%': '8.0%' }
+      ]
+    };
+
+    let appState = JSON.parse(localStorage.getItem('honeymoon_holdings_v1')) || DEFAULT_STATE;
+    let gasUrl = localStorage.getItem('honeymoon_gas_url') || '';
+
+    function saveLocal() {
+      localStorage.setItem('honeymoon_holdings_v1', JSON.stringify(appState));
+      renderAll();
+    }
+
+    function switchTab(tabName) {
+      ['income', 'balance', 'cashflow'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tabName);
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === tabName) {
+          btn.classList.add('tab-active');
+          btn.classList.remove('text-rose-500');
+        } else {
+          btn.classList.remove('tab-active');
+          btn.classList.add('text-rose-500');
+        }
+      });
+    }
+
+    function toggleModal(id) {
+      const el = document.getElementById(id);
+      el.classList.toggle('hidden');
+      if (id === 'settingsModal') {
+        document.getElementById('gasUrlInput').value = gasUrl;
+      }
+    }
+
+    function toggleInstallmentField() {
+      const type = document.getElementById('cfType').value;
+      document.getElementById('cfMonthsBox').classList.toggle('hidden', type !== '員工無息分期');
+    }
+
+    // 計算目前進行中的員工無息分期「本期應扣總額」
+    function getActiveInstallmentMonthlyDue() {
+      let totalDue = 0;
+      appState.cashFlows.forEach(item => {
+        if (item.類型 === '員工無息分期' && item.狀態 === '扣款中' && Number(item.已扣期數) < Number(item.分期總月數)) {
+          totalDue += Math.round(Number(item.總金額) / Number(item.分期總月數));
+        }
+      });
+      return totalDue;
+    }
+
+    function recalcIncomePreview() {
+      const gross = Number(document.getElementById('inGrossSalary').value) || 0;
+      const pEmp = Number(document.getElementById('pctEmp').value) || 0;
+      const pOp = Number(document.getElementById('pctOp').value) || 0;
+      const pInv = Number(document.getElementById('pctInv').value) || 0;
+      const pRes = Number(document.getElementById('pctRes').value) || 0;
+
+      document.getElementById('pctWarning').classList.toggle('hidden', (pEmp + pOp + pInv + pRes) === 100);
+      document.getElementById('lblEmpPct').textContent = pEmp;
+
+      const empGross = Math.round(gross * (pEmp / 100));
+      const deduct = getActiveInstallmentMonthlyDue();
+      const empNet = Math.max(0, empGross - deduct);
+      const opAmt = Math.round(gross * (pOp / 100));
+      const invAmt = Math.round(gross * (pInv / 100));
+      const resAmt = Math.round(gross * (pRes / 100)) + deduct;
+
+      document.getElementById('prevEmpGross').textContent = `$${empGross.toLocaleString()}`;
+      document.getElementById('prevInstallmentDeduct').textContent = `-$${deduct.toLocaleString()}`;
+      document.getElementById('prevEmpNetTransfer').textContent = `$${empNet.toLocaleString()}`;
+      document.getElementById('prevOpAmt').textContent = `$${opAmt.toLocaleString()}`;
+      document.getElementById('prevInvAmt').textContent = `$${invAmt.toLocaleString()}`;
+      document.getElementById('prevResAmt').textContent = `$${resAmt.toLocaleString()}`;
+    }
+
+    async function postToCloud(payload) {
+      if (!gasUrl) return;
+      try {
+        const res = await fetch(gasUrl, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          appState = json.data;
+          saveLocal();
+        }
+      } catch (err) {
+        console.warn('雲端寫入失敗，已暫存本地:', err);
+      }
+    }
+
+    async function syncFromCloud() {
+      if (!gasUrl) {
+        alert('尚未設定 Google Sheet 網址喔！請先點右上角 ⚙️ 貼上部署網址。');
+        return;
+      }
+      const btn = document.getElementById('syncBtn');
+      btn.textContent = '⏳ 同步中...';
+      try {
+        const res = await fetch(gasUrl);
+        const json = await res.json();
+        if (json.status === 'success') {
+          appState = json.data;
+          saveLocal();
+          btn.textContent = '✅ 已同步';
+          setTimeout(() => btn.textContent = '🔄 同步雲端', 1500);
+        }
+      } catch (e) {
+        alert('同步失敗，請檢查網址權限是否設為「所有人」');
+        btn.textContent = '🔄 同步雲端';
+      }
+    }
+
+    function saveGasUrl() {
+      gasUrl = document.getElementById('gasUrlInput').value.trim();
+      localStorage.setItem('honeymoon_gas_url', gasUrl);
+      toggleModal('settingsModal');
+      if (gasUrl) syncFromCloud();
+    }
+
+    async function submitIncomeRecord() {
+      const gross = Number(document.getElementById('inGrossSalary').value) || 0;
+      const pEmp = Number(document.getElementById('pctEmp').value) || 0;
+      const pOp = Number(document.getElementById('pctOp').value) || 0;
+      const pInv = Number(document.getElementById('pctInv').value) || 0;
+      const pRes = Number(document.getElementById('pctRes').value) || 0;
+
+      const empGross = Math.round(gross * (pEmp / 100));
+      const deduct = getActiveInstallmentMonthlyDue();
+      const empNet = Math.max(0, empGross - deduct);
+      const today = new Date().toISOString().slice(0, 10);
+
+      const record = {
+        date: today,
+        month: today.slice(0, 7),
+        grossIncome: gross,
+        empPct: pEmp,
+        opPct: pOp,
+        invPct: pInv,
+        resPct: pRes,
+        installmentDeducted: deduct,
+        netEmpTransfer: empNet,
+        note: deduct > 0 ? `已自動內扣分期 $${deduct.toLocaleString()}` : '標準水庫分配'
+      };
+
+      // 更新進行中分期期數
+      for (let item of appState.cashFlows) {
+        if (item.類型 === '員工無息分期' && item.狀態 === '扣款中') {
+          item.已扣期數 = Number(item.已扣期數) + 1;
+          if (item.已扣期數 >= Number(item.分期總月數)) item.狀態 = '已結清';
+          if (gasUrl) await postToCloud({ action: 'advanceInstallment', id: item.編號 });
+        }
+      }
+
+      appState.incomeLogs.unshift({
+        日期: record.date, 月份: record.month, 入帳總薪資: record.grossIncome,
+        '員工比例%': record.empPct, '營運比例%': record.opPct, '投資比例%': record.invPct, '保留盈餘%': record.resPct,
+        本期分期內扣: record.installmentDeducted, 員工實領匯款額: record.netEmpTransfer, 備註: record.note
+      });
+      saveLocal();
+      await postToCloud({ action: 'addIncome', record });
+      alert(`💖 入帳成功！本月請直接匯款 NT$ ${empNet.toLocaleString()} 給員工羽伶！`);
+    }
+
+    async function submitAsset() {
+      const symbol = document.getElementById('asSymbol').value.trim().toUpperCase();
+      const name = document.getElementById('asName').value.trim() || symbol;
+      const shares = Number(document.getElementById('asShares').value) || 0;
+      const cost = Number(document.getElementById('asCost').value) || 0;
+      if (!symbol || shares <= 0) return alert('請填寫代號與股數喔！');
+
+      const today = new Date().toISOString().slice(0, 10);
+      const existing = appState.assets.find(a => a.代號 === symbol);
+      if (existing) {
+        existing.累計購入股數 = Number(existing.累計購入股數) + shares;
+        existing.總投入成本 = Number(existing.總投入成本) + cost;
+        existing.最後更新日 = today;
+      } else {
+        appState.assets.push({ 代號: symbol, 名稱: name, 累計購入股數: shares, 總投入成本: cost, 最後更新日: today });
+      }
+      saveLocal();
+      toggleModal('addAssetModal');
+      await postToCloud({ action: 'addAsset', asset: { symbol, name, shares, cost, lastDate: today } });
+    }
+
+    async function submitCashFlow() {
+      const type = document.getElementById('cfType').value;
+      const title = document.getElementById('cfTitle').value.trim();
+      const amount = Number(document.getElementById('cfAmount').value) || 0;
+      const months = type === '員工無息分期' ? (Number(document.getElementById('cfMonths').value) || 1) : 1;
+      if (!title || amount <= 0) return alert('請填寫項目與金額！');
+
+      const record = {
+        id: 'CF-' + Date.now().toString().slice(-4),
+        date: new Date().toISOString().slice(0, 10),
+        type, title, amount,
+        totalMonths: months,
+        paidMonths: type === '員工無息分期' ? 0 : 1,
+        status: type === '員工無息分期' ? '扣款中' : '已結清'
+      };
+
+      appState.cashFlows.unshift({
+        編號: record.id, 日期: record.date, 類型: record.type, 項目說明: record.title,
+        總金額: record.amount, 分期總月數: record.totalMonths, 已扣期數: record.paidMonths, 狀態: record.status
+      });
+      saveLocal();
+      toggleModal('addCashFlowModal');
+      await postToCloud({ action: 'addCashFlow', record });
+    }
+
+    async function submitAnnualReturn() {
+      const year = document.getElementById('yrLabel').value.trim();
+      const startA = Number(document.getElementById('yrStart').value) || 0;
+      const netIn = Number(document.getElementById('yrNetIn').value) || 0;
+      const endA = Number(document.getElementById('yrEnd').value) || 0;
+      const denom = startA + (netIn / 2);
+      const rate = denom > 0 ? (((endA - startA - netIn) / denom) * 100).toFixed(2) + '%' : '0.00%';
+
+      const record = { year, startAssets: startA, netContribution: netIn, endAssets: endA, returnRate: rate };
+      appState.annualReturns.unshift({
+        年度: year, 年初總資產: startA, 年度淨投入本金: netIn, 年底總資產: endA, '年度真實報酬率%': rate
+      });
+      saveLocal();
+      toggleModal('addReturnModal');
+      await postToCloud({ action: 'addAnnualReturn', record });
+    }
+
+    function renderAll() {
+      recalcIncomePreview();
+
+      // 計算四大水庫總累積金額
+      let totalInvAllocated = 0;
+      let totalResAllocated = 0;
+      appState.incomeLogs.forEach(log => {
+        const g = Number(log.入帳總薪資) || 0;
+        totalInvAllocated += Math.round(g * (Number(log['投資比例%']) / 100));
+        totalResAllocated += Math.round(g * (Number(log['保留盈餘%']) / 100)) + (Number(log.本期分期內扣) || 0);
+      });
+
+      // 計算買股總投入成本
+      let totalStockCost = 0;
+      appState.assets.forEach(a => totalStockCost += Number(a.總投入成本) || 0);
+
+      // 計算保留盈餘已流出金額
+      let totalResOut = 0;
+      let unpaidInstallments = 0;
+      appState.cashFlows.forEach(cf => {
+        totalResOut += Number(cf.總金額) || 0;
+        if (cf.類型 === '員工無息分期' && cf.狀態 === '扣款中') {
+          const perM = Math.round(Number(cf.總金額) / Number(cf.分期總月數));
+          const remM = Number(cf.分期總月數) - Number(cf.已扣期數);
+          unpaidInstallments += perM * remM;
+        }
+      });
+
+      const investCashLeft = totalInvAllocated - totalStockCost;
+      const reserveCashLeft = totalResAllocated - totalResOut;
+      const totalWealth = totalStockCost + Math.max(0, investCashLeft) + Math.max(0, reserveCashLeft);
+
+      document.getElementById('heroTotalWealth').textContent = `NT$ ${totalWealth.toLocaleString()}`;
+      document.getElementById('heroInvestedCost').textContent = `$${totalStockCost.toLocaleString()}`;
+      document.getElementById('heroCashReserve').textContent = `$${(investCashLeft + reserveCashLeft).toLocaleString()}`;
+      document.getElementById('bsInvestCashBalance').textContent = `$${investCashLeft.toLocaleString()}`;
+      document.getElementById('bsReserveCashBalance').textContent = `$${reserveCashLeft.toLocaleString()}`;
+
+      // 進度條（假設第一階段蜜月基金里程碑 100 萬）
+      const pct = Math.min(100, Math.max(5, Math.round((totalWealth / 1000000) * 100)));
+      document.getElementById('honeymoonProgressBar').style.width = pct + '%';
+
+      // 渲染損益歷史
+      document.getElementById('incomeHistoryList').innerHTML = appState.incomeLogs.map(l => `
+        <div class="bg-white/90 p-3 rounded-xl border border-pink-100 flex justify-between items-center">
+          <div>
+            <div class="font-bold text-rose-900">${l.月份} 入帳 $${Number(l.入帳總薪資).toLocaleString()}</div>
+            <div class="text-[11px] text-gray-400">${l.備註 || ''}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[11px] text-rose-500">員工實匯</div>
+            <div class="font-bold text-pink-600 text-sm">$${Number(l.員工實領匯款額).toLocaleString()}</div>
+          </div>
+        </div>
+      `).join('');
+
+      // 渲染股票列項（只看股數與花費）
+      document.getElementById('assetListContainer').innerHTML = appState.assets.map(a => `
+        <div class="bg-white p-3.5 rounded-xl border border-pink-100 flex justify-between items-center">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-extrabold text-rose-900 text-sm">${a.代號}</span>
+              <span class="text-xs text-gray-500">${a.名稱}</span>
+            </div>
+            <div class="text-[11px] text-gray-400 mt-1">累計投入成本：$${Number(a.總投入成本).toLocaleString()}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[11px] text-rose-400">累計股數(財富)</div>
+            <div class="font-extrabold text-lg text-rose-700">${Number(a.累計購入股數).toLocaleString()} <span class="text-xs font-normal">股</span></div>
+          </div>
+        </div>
+      `).join('');
+
+      // 渲染年度報酬率
+      document.getElementById('annualReturnList').innerHTML = appState.annualReturns.map(r => `
+        <div class="bg-amber-50/70 p-3 rounded-xl border border-amber-200 flex justify-between items-center">
+          <div>
+            <div class="font-bold text-amber-900">${r.年度} 年度結算</div>
+            <div class="text-[11px] text-amber-700">淨投入 $${Number(r.年度淨投入本金).toLocaleString()} → 年底 $${Number(r.年底總資產).toLocaleString()}</div>
+          </div>
+          <div class="font-extrabold text-base text-emerald-700">${r['年度真實報酬率%']}</div>
+        </div>
+      `).join('');
+
+      // 渲染內部負債
+      const activeInst = appState.cashFlows.filter(c => c.類型 === '員工無息分期' && c.狀態 === '扣款中');
+      document.getElementById('bsLiabilityList').innerHTML = activeInst.length ? activeInst.map(c => {
+        const perM = Math.round(Number(c.總金額) / Number(c.分期總月數));
+        const rem = perM * (Number(c.分期總月數) - Number(c.已扣期數));
+        return `
+          <div class="bg-amber-50 p-3 rounded-xl flex justify-between items-center">
+            <div>
+              <div class="font-bold text-amber-900">${c.項目說明}</div>
+              <div class="text-[11px] text-amber-700">進度：已扣 ${c.已扣期數}/${c.分期總月數} 期（每月內扣 $${perM.toLocaleString()}）</div>
+            </div>
+            <div class="font-bold text-amber-900">未還 $${rem.toLocaleString()}</div>
+          </div>
+        `;
+      }).join('') : '<div class="text-gray-400 text-center py-2">目前無任何員工分期欠款，零負債一身輕 ✨</div>';
+
+      // 渲染現金流列表
+      document.getElementById('cashFlowList').innerHTML = appState.cashFlows.map(c => `
+        <div class="bg-white p-3 rounded-xl border border-pink-100 flex justify-between items-center">
+          <div>
+            <span class="text-[10px] px-2 py-0.5 rounded-full ${c.類型 === '員工無息分期' ? 'bg-amber-100 text-amber-800' : 'bg-pink-100 text-pink-700'}">${c.類型}</span>
+            <div class="font-bold text-rose-900 mt-1">${c.項目說明}</div>
+            <div class="text-[11px] text-gray-400">${c.日期} ・ ${c.狀態}</div>
+          </div>
+          <div class="font-bold text-rose-800 text-sm">-$${Number(c.總金額).toLocaleString()}</div>
+        </div>
+      `).join('');
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
